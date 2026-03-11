@@ -119,10 +119,17 @@ const autoSeedIfEmpty = async () => {
   console.log('🎉 Demo seed complete!');
 };
 
-// Start server
-app.listen(PORT, async () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-  await ensureStorageBucket('properties');
-  await autoSeedIfEmpty();
-});
+// Start server only if not running in a Vercel serverless environment
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.listen(PORT, async () => {
+    console.log(`🚀 Server is running on port ${PORT}`);
+    await ensureStorageBucket('properties');
+    await autoSeedIfEmpty();
+  });
+} else {
+  // Even in serverless, we might want to ensure bucket exists
+  // but it's an async operation. Let's do it lazily or assume it's set up.
+  // For Vercel, we simply export the Express app.
+}
 
+export default app;
