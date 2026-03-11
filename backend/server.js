@@ -127,9 +127,17 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     await autoSeedIfEmpty();
   });
 } else {
-  // Even in serverless, we might want to ensure bucket exists
-  // but it's an async operation. Let's do it lazily or assume it's set up.
-  // For Vercel, we simply export the Express app.
+  // We are in serverless (e.g. Vercel)
+  // Provide a hidden endpoint to manually trigger seeding since it doesn't run on boot
+  app.get('/api/seed', async (req, res) => {
+    try {
+      await ensureStorageBucket('properties');
+      await autoSeedIfEmpty();
+      res.json({ message: 'Database seeding completed successfully.' });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
 }
 
 export default app;
